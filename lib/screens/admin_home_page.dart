@@ -280,6 +280,140 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 
+  Future<void> confirmRemoveSavedStation(String stationId) async {
+    final userId = selectedUser?['id']?.toString();
+
+    if (userId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Remove saved station?'),
+          content: const Text(
+            'This station will be removed from this user’s saved stations.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final data = await ApiService.removeSavedStation(
+        userId: userId,
+        stationId: stationId,
+      );
+
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        setState(() {
+          selectedStations.removeWhere(
+            (station) => station['id'].toString() == stationId,
+          );
+        });
+
+        await loadUsers();
+      }
+
+      if (!mounted) return;
+
+      showMessage(
+        data['message'] ?? 'Saved station removed',
+        data['success'] == true ? Colors.green : Colors.red,
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
+  Future<void> confirmRemoveUser() async {
+    final userId = selectedUser?['id']?.toString();
+
+    if (userId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Remove user?'),
+          content: const Text(
+            'The user’s information will remain in the database, but the account will be disabled.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final data = await ApiService.removeUser(userId);
+
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        setState(() {
+          showingUserDetails = false;
+          selectedUser = null;
+          selectedStations = [];
+          selectedTickets = [];
+        });
+
+        await loadUsers();
+      }
+
+      if (!mounted) return;
+
+      showMessage(
+        data['message'] ?? 'User removed',
+        data['success'] == true ? Colors.green : Colors.red,
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
   Future<void> sendNotification() async {
     String title = globalTitleController.text.trim();
     String message = globalMessageController.text.trim();
@@ -998,6 +1132,15 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             onPressed: showEditUserDialog,
                             child: const Text('Edit User'),
                           ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: confirmRemoveUser,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            icon: const Icon(Icons.person_remove_outlined),
+                            label: const Text('Remove User'),
+                          ),
                         ],
                       ),
                     ],
@@ -1027,6 +1170,18 @@ class _AdminHomePageState extends State<AdminHomePage> {
                                 ),
                                 title: Text(station['name'].toString()),
                                 subtitle: Text(line),
+                                trailing: IconButton(
+                                  tooltip: 'Remove saved station',
+                                  onPressed: () {
+                                    confirmRemoveSavedStation(
+                                      station['id'].toString(),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                  ),
+                                ),
                               ),
                               const Divider(),
                             ],

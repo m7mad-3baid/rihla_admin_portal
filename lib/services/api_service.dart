@@ -37,6 +37,27 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  static Future<Map<String, dynamic>> removeSavedStation({
+    required String userId,
+    required String stationId,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/removestations.php'),
+      body: {'user_id': userId, 'station_id': stationId},
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> removeUser(String userId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/admin_remove_user.php'),
+      body: {'user_id': userId},
+    );
+
+    return jsonDecode(response.body);
+  }
+
   static Future<Map<String, dynamic>> getStations() async {
     final response = await http.get(
       Uri.parse('$baseUrl/admin_stations.php?action=list'),
