@@ -43,13 +43,7 @@ class AdminPreferencesScreen extends StatelessWidget {
                       const CircleAvatar(
                         radius: 25,
                         backgroundColor: Color(0xFFE1F0F2),
-                        child: Text(
-                          'MK',
-                          style: TextStyle(
-                            color: AdminTheme.teal,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: Icon(Icons.person, color: AdminTheme.teal),
                       ),
                       const SizedBox(width: 12),
                       Column(
