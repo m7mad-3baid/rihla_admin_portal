@@ -35,10 +35,7 @@ class AdminSidebar extends StatelessWidget {
                     color: Color(0xFF317780),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.train_outlined,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.train_outlined, color: Colors.white),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -167,10 +164,7 @@ class AdminSidebar extends StatelessWidget {
               ),
               child: const Row(
                 children: [
-                  Icon(
-                    Icons.confirmation_number_outlined,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.confirmation_number_outlined, color: Colors.white),
                   SizedBox(width: 14),
                   Text(
                     'Ticket Pricing',
@@ -257,10 +251,7 @@ class AdminSidebar extends StatelessWidget {
                 children: [
                   Icon(Icons.logout, color: Colors.white70),
                   SizedBox(width: 10),
-                  Text(
-                    'Sign out',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+                  Text('Sign out', style: TextStyle(color: Colors.white70)),
                 ],
               ),
             ),

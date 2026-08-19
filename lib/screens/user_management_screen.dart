@@ -1,51 +1,392 @@
 import 'package:flutter/material.dart';
 
 import '../helpers/admin_formatters.dart';
+import '../services/api_service.dart';
 import '../themes/admin_theme.dart';
 import '../widgets/admin_card.dart';
 
-class UserManagementScreen extends StatelessWidget {
-  const UserManagementScreen({
-    super.key,
-    required this.showingUserDetails,
-    required this.isUsersLoading,
-    required this.usersError,
-    required this.filteredUsers,
-    required this.onSearchChanged,
-    required this.onUserSelected,
-    required this.selectedUser,
-    required this.selectedStations,
-    required this.selectedTickets,
-    required this.isUserDetailsLoading,
-    required this.userDetailsError,
-    required this.onBackToUsers,
-    required this.onEditUser,
-    required this.onRemoveUser,
-    required this.onRemoveSavedStation,
-  });
+class UserManagementScreen extends StatefulWidget {
+  const UserManagementScreen({super.key, this.initialUser});
 
-  final bool showingUserDetails;
-  final bool isUsersLoading;
-  final String usersError;
-  final List<dynamic> filteredUsers;
-  final ValueChanged<String> onSearchChanged;
-  final ValueChanged<Map<String, dynamic>> onUserSelected;
-  final Map<String, dynamic>? selectedUser;
-  final List<dynamic> selectedStations;
-  final List<dynamic> selectedTickets;
-  final bool isUserDetailsLoading;
-  final String userDetailsError;
-  final VoidCallback onBackToUsers;
-  final VoidCallback onEditUser;
-  final VoidCallback onRemoveUser;
-  final ValueChanged<String> onRemoveSavedStation;
+  final Map<String, dynamic>? initialUser;
 
-  Widget usersPageRow(Map<String, dynamic> user) {
+  @override
+  State<UserManagementScreen> createState() => _UserManagementScreenState();
+}
+
+class _UserManagementScreenState extends State<UserManagementScreen> {
+  List<dynamic> users = [];
+  bool isUsersLoading = true;
+  String usersError = '';
+  String search = '';
+
+  bool showingUserDetails = false;
+  Map<String, dynamic>? selectedUser;
+  List<dynamic> savedStations = [];
+  List<dynamic> purchasedTickets = [];
+  bool isDetailsLoading = false;
+  String detailsError = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadUsers();
+
+    if (widget.initialUser != null) {
+      loadUserDetails(widget.initialUser!);
+    }
+  }
+
+  Future<void> loadUsers() async {
+    try {
+      final data = await ApiService.getUsers();
+      if (!mounted) return;
+
+      setState(() {
+        if (data['success'] == true) {
+          users = List<dynamic>.from(data['data']);
+          usersError = '';
+        } else {
+          usersError = data['message'] ?? 'Could not load users';
+        }
+        isUsersLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        usersError = 'Could not connect to the server';
+        isUsersLoading = false;
+      });
+    }
+  }
+
+  Future<void> loadUserDetails(Map<String, dynamic> user) async {
+    setState(() {
+      selectedUser = user;
+      showingUserDetails = true;
+      isDetailsLoading = true;
+      detailsError = '';
+    });
+
+    try {
+      final data = await ApiService.getUserDetails(user['id'].toString());
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        setState(() {
+          selectedUser = Map<String, dynamic>.from(data['data']['user']);
+          savedStations = List<dynamic>.from(data['data']['stations']);
+          purchasedTickets = List<dynamic>.from(data['data']['tickets']);
+          isDetailsLoading = false;
+        });
+      } else {
+        setState(() {
+          detailsError = data['message'] ?? 'Could not load user details';
+          isDetailsLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        detailsError = 'Could not connect to the server';
+        isDetailsLoading = false;
+      });
+    }
+  }
+
+  Future<void> updateUser({
+    required int id,
+    required String name,
+    required String email,
+    required String password,
+    required bool isStudent,
+  }) async {
+    try {
+      final data = await ApiService.updateUser(
+        id: id,
+        name: name,
+        email: email,
+        password: password,
+        isStudent: isStudent,
+      );
+
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        await loadUsers();
+        await loadUserDetails({'id': id});
+        if (!mounted) return;
+        showMessage('User updated successfully', Colors.green);
+      } else {
+        showMessage(data['message'] ?? 'Could not update user', Colors.red);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
+  Future<void> editUser() async {
+    if (selectedUser == null) return;
+
+    final nameController = TextEditingController(
+      text: selectedUser!['name'].toString(),
+    );
+    final emailController = TextEditingController(
+      text: selectedUser!['email'].toString(),
+    );
+    final passwordController = TextEditingController();
+    bool isStudent = selectedUser!['is_student'].toString() == '1';
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Edit User Information'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              content: SizedBox(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'New Password',
+                        hintText: 'Leave empty to keep current password',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: isStudent ? 'Student' : 'Regular',
+                      decoration: const InputDecoration(
+                        labelText: 'Student Status',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Student',
+                          child: Text('Student'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Regular',
+                          child: Text('Regular'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setDialogState(() {
+                          isStudent = value == 'Student';
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    int id = int.tryParse(selectedUser!['id'].toString()) ?? 0;
+                    String name = nameController.text.trim();
+                    String email = emailController.text.trim();
+                    String password = passwordController.text;
+
+                    Navigator.pop(context);
+                    updateUser(
+                      id: id,
+                      name: name,
+                      email: email,
+                      password: password,
+                      isStudent: isStudent,
+                    );
+                  },
+                  icon: const Icon(Icons.save),
+                  label: const Text('Save Changes'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AdminTheme.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+  }
+
+  Future<void> removeSavedStation(String stationId) async {
+    String? userId = selectedUser?['id']?.toString();
+    if (userId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Remove saved station?'),
+          content: const Text(
+            'This station will be removed from this user’s saved stations.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final data = await ApiService.removeSavedStation(
+        userId: userId,
+        stationId: stationId,
+      );
+
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        setState(() {
+          savedStations.removeWhere(
+            (station) => station['id'].toString() == stationId,
+          );
+        });
+        await loadUsers();
+      }
+
+      if (!mounted) return;
+      showMessage(
+        data['message'] ?? 'Saved station removed',
+        data['success'] == true ? Colors.green : Colors.red,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
+  Future<void> removeUser() async {
+    String? userId = selectedUser?['id']?.toString();
+    if (userId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Remove user?'),
+          content: const Text(
+            'The user’s information will remain in the database, but the account will be disabled.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Remove'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final data = await ApiService.removeUser(userId);
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        setState(() {
+          showingUserDetails = false;
+          selectedUser = null;
+          savedStations = [];
+          purchasedTickets = [];
+        });
+        await loadUsers();
+      }
+
+      if (!mounted) return;
+      showMessage(
+        data['message'] ?? 'User removed',
+        data['success'] == true ? Colors.green : Colors.red,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
+  void showMessage(String message, Color color) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
+  List<dynamic> get filteredUsers {
+    if (search.isEmpty) return users;
+
+    return users.where((user) {
+      String name = user['name'].toString().toLowerCase();
+      String email = user['email'].toString().toLowerCase();
+      String studentId = user['student_id'].toString().toLowerCase();
+
+      return name.contains(search) ||
+          email.contains(search) ||
+          studentId.contains(search);
+    }).toList();
+  }
+
+  Widget userRow(Map<String, dynamic> user) {
     String name = user['name'].toString();
     String email = user['email'].toString();
     String balance = '${user['balance']} SDG';
-    String stations = user['saved_stations_count'].toString();
-    String tickets = user['tickets_count'].toString();
+    String stationCount = user['saved_stations_count'].toString();
+    String ticketCount = user['tickets_count'].toString();
     bool isStudent = user['is_student'].toString() == '1';
 
     return Padding(
@@ -80,11 +421,11 @@ class UserManagementScreen extends StatelessWidget {
             ),
           ),
           Expanded(flex: 2, child: Text(balance)),
-          Expanded(child: Text(stations)),
-          Expanded(child: Text(tickets)),
+          Expanded(child: Text(stationCount)),
+          Expanded(child: Text(ticketCount)),
           Expanded(
             child: OutlinedButton(
-              onPressed: () => onUserSelected(user),
+              onPressed: () => loadUserDetails(user),
               child: const Text('View'),
             ),
           ),
@@ -93,7 +434,7 @@ class UserManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget buildUsersPage() {
+  Widget buildUsersList() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(28),
       child: Card(
@@ -104,8 +445,9 @@ class UserManagementScreen extends StatelessWidget {
           child: Column(
             children: [
               TextField(
-                onChanged: (value) =>
-                    onSearchChanged(value.trim().toLowerCase()),
+                onChanged: (value) {
+                  setState(() => search = value.trim().toLowerCase());
+                },
                 decoration: const InputDecoration(
                   hintText: 'Search by name, email, or user ID',
                   prefixIcon: Icon(Icons.search),
@@ -150,7 +492,7 @@ class UserManagementScreen extends StatelessWidget {
                 )
               else
                 ...filteredUsers.map((user) {
-                  return usersPageRow(Map<String, dynamic>.from(user));
+                  return userRow(Map<String, dynamic>.from(user));
                 }),
             ],
           ),
@@ -159,17 +501,14 @@ class UserManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget buildUserDetailsPage() {
-    if (isUserDetailsLoading) {
+  Widget buildUserDetails() {
+    if (isDetailsLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (userDetailsError.isNotEmpty) {
+    if (detailsError.isNotEmpty) {
       return Center(
-        child: Text(
-          userDetailsError,
-          style: const TextStyle(color: Colors.red),
-        ),
+        child: Text(detailsError, style: const TextStyle(color: Colors.red)),
       );
     }
 
@@ -198,7 +537,7 @@ class UserManagementScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextButton.icon(
-                onPressed: onBackToUsers,
+                onPressed: () => setState(() => showingUserDetails = false),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Back to Users'),
               ),
@@ -274,12 +613,12 @@ class UserManagementScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 10),
                           OutlinedButton(
-                            onPressed: onEditUser,
+                            onPressed: editUser,
                             child: const Text('Edit User'),
                           ),
                           const SizedBox(height: 8),
                           OutlinedButton.icon(
-                            onPressed: onRemoveUser,
+                            onPressed: removeUser,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red,
                             ),
@@ -296,13 +635,13 @@ class UserManagementScreen extends StatelessWidget {
               AdminCard(
                 title: 'Saved Stations',
                 subtitle: 'Stations saved by this user.',
-                child: selectedStations.isEmpty
+                child: savedStations.isEmpty
                     ? const Text(
                         'This user has no saved stations.',
                         style: TextStyle(color: Colors.blueGrey),
                       )
                     : Column(
-                        children: selectedStations.map((station) {
+                        children: savedStations.map((station) {
                           String line =
                               station['line']?.toString() ?? 'Metro Line';
 
@@ -317,9 +656,11 @@ class UserManagementScreen extends StatelessWidget {
                                 subtitle: Text(line),
                                 trailing: IconButton(
                                   tooltip: 'Remove saved station',
-                                  onPressed: () => onRemoveSavedStation(
-                                    station['id'].toString(),
-                                  ),
+                                  onPressed: () {
+                                    removeSavedStation(
+                                      station['id'].toString(),
+                                    );
+                                  },
                                   icon: const Icon(
                                     Icons.delete_outline,
                                     color: Colors.red,
@@ -336,7 +677,7 @@ class UserManagementScreen extends StatelessWidget {
               AdminCard(
                 title: 'Purchased Tickets',
                 subtitle: 'Ticket information is read-only.',
-                child: selectedTickets.isEmpty
+                child: purchasedTickets.isEmpty
                     ? const Text(
                         'This user has not purchased any tickets.',
                         style: TextStyle(color: Colors.blueGrey),
@@ -353,7 +694,7 @@ class UserManagementScreen extends StatelessWidget {
                             ],
                           ),
                           const Divider(),
-                          ...selectedTickets.map((ticket) {
+                          ...purchasedTickets.map((ticket) {
                             String expiresAt = ticket['expires_at'].toString();
                             bool isActive =
                                 DateTime.tryParse(
@@ -416,9 +757,9 @@ class UserManagementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (showingUserDetails) {
-      return buildUserDetailsPage();
+      return buildUserDetails();
     }
 
-    return buildUsersPage();
+    return buildUsersList();
   }
 }

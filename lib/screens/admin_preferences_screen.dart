@@ -1,29 +1,101 @@
 import 'package:flutter/material.dart';
 
+import '../services/api_service.dart';
 import '../themes/admin_theme.dart';
 import '../widgets/admin_card.dart';
 
-class AdminPreferencesScreen extends StatelessWidget {
-  const AdminPreferencesScreen({
-    super.key,
-    required this.admin,
-    required this.adminNameController,
-    required this.adminEmailController,
-    required this.currentPasswordController,
-    required this.newPasswordController,
-    required this.confirmPasswordController,
-    required this.onUpdateAdminProfile,
-    required this.onChangeAdminPassword,
-  });
+class AdminPreferencesScreen extends StatefulWidget {
+  const AdminPreferencesScreen({super.key, required this.admin});
 
   final Map<String, dynamic> admin;
-  final TextEditingController adminNameController;
-  final TextEditingController adminEmailController;
-  final TextEditingController currentPasswordController;
-  final TextEditingController newPasswordController;
-  final TextEditingController confirmPasswordController;
-  final VoidCallback onUpdateAdminProfile;
-  final VoidCallback onChangeAdminPassword;
+
+  @override
+  State<AdminPreferencesScreen> createState() => _AdminPreferencesScreenState();
+}
+
+class _AdminPreferencesScreenState extends State<AdminPreferencesScreen> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController currentPasswordController =
+      TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    nameController.text = widget.admin['name']?.toString() ?? '';
+    emailController.text = widget.admin['email']?.toString() ?? '';
+  }
+
+  Future<void> updateProfile() async {
+    try {
+      final data = await ApiService.updateAdminProfile(
+        id: widget.admin['id'].toString(),
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      showMessage(
+        data['message'] ?? 'Profile updated',
+        data['success'] == true ? Colors.green : Colors.red,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
+  Future<void> changePassword() async {
+    if (newPasswordController.text.isEmpty ||
+        newPasswordController.text != confirmPasswordController.text) {
+      showMessage('Enter matching new passwords', Colors.red);
+      return;
+    }
+
+    try {
+      final data = await ApiService.changeAdminPassword(
+        id: widget.admin['id'].toString(),
+        currentPassword: currentPasswordController.text,
+        newPassword: newPasswordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        currentPasswordController.clear();
+        newPasswordController.clear();
+        confirmPasswordController.clear();
+      }
+
+      showMessage(
+        data['message'] ?? 'Password updated',
+        data['success'] == true ? Colors.green : Colors.red,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
+  void showMessage(String message, Color color) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    currentPasswordController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,14 +122,14 @@ class AdminPreferencesScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            admin['name']?.toString() ?? 'Admin',
+                            widget.admin['name']?.toString() ?? 'Admin',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
                           Text(
-                            admin['email']?.toString() ?? '',
+                            widget.admin['email']?.toString() ?? '',
                             style: const TextStyle(color: Colors.blueGrey),
                           ),
                           const Text(
@@ -75,7 +147,7 @@ class AdminPreferencesScreen extends StatelessWidget {
                   const Divider(),
                   const SizedBox(height: 16),
                   TextField(
-                    controller: adminNameController,
+                    controller: nameController,
                     decoration: const InputDecoration(
                       labelText: 'Full Name',
                       border: OutlineInputBorder(),
@@ -83,7 +155,7 @@ class AdminPreferencesScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   TextField(
-                    controller: adminEmailController,
+                    controller: emailController,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       border: OutlineInputBorder(),
@@ -93,7 +165,7 @@ class AdminPreferencesScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: ElevatedButton.icon(
-                      onPressed: onUpdateAdminProfile,
+                      onPressed: updateProfile,
                       icon: const Icon(Icons.save),
                       label: const Text('Save Changes'),
                       style: ElevatedButton.styleFrom(
@@ -141,7 +213,7 @@ class AdminPreferencesScreen extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: ElevatedButton.icon(
-                      onPressed: onChangeAdminPassword,
+                      onPressed: changePassword,
                       icon: const Icon(Icons.lock_reset),
                       label: const Text('Update Password'),
                       style: ElevatedButton.styleFrom(

@@ -1,38 +1,174 @@
 import 'package:flutter/material.dart';
 
 import '../helpers/admin_formatters.dart';
+import '../services/api_service.dart';
 import '../themes/admin_theme.dart';
 import '../widgets/admin_card.dart';
 
-class StationManagementScreen extends StatelessWidget {
-  const StationManagementScreen({
-    super.key,
-    required this.selectedLine,
-    required this.managedStations,
-    required this.newStationController,
-    required this.latitudeController,
-    required this.longitudeController,
-    required this.onLineSelected,
-    required this.onEditStation,
-    required this.onDeleteStation,
-    required this.onAddStation,
-  });
+class StationManagementScreen extends StatefulWidget {
+  const StationManagementScreen({super.key});
 
-  final String selectedLine;
-  final List<dynamic> managedStations;
-  final TextEditingController newStationController;
-  final TextEditingController latitudeController;
-  final TextEditingController longitudeController;
-  final ValueChanged<String> onLineSelected;
-  final ValueChanged<Map<String, dynamic>> onEditStation;
-  final ValueChanged<String> onDeleteStation;
-  final VoidCallback onAddStation;
+  @override
+  State<StationManagementScreen> createState() =>
+      _StationManagementScreenState();
+}
+
+class _StationManagementScreenState extends State<StationManagementScreen> {
+  String selectedLine = 'Red';
+  List<dynamic> stations = [];
+
+  final TextEditingController stationController = TextEditingController();
+  final TextEditingController latitudeController = TextEditingController();
+  final TextEditingController longitudeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    loadStations();
+  }
+
+  Future<void> loadStations() async {
+    try {
+      final data = await ApiService.getStations();
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        setState(() => stations = List<dynamic>.from(data['data']));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> stationAction(Map<String, String> body) async {
+    try {
+      final data = await ApiService.stationAction(body);
+      if (!mounted) return;
+
+      if (data['success'] == true) {
+        await loadStations();
+        if (!mounted) return;
+        showMessage('Station updated successfully', Colors.green);
+      } else {
+        showMessage(data['message'] ?? 'Could not update station', Colors.red);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      showMessage('Could not connect to the server', Colors.red);
+    }
+  }
+
+  Future<void> addStation() async {
+    String name = stationController.text.trim();
+
+    if (name.isEmpty) {
+      showMessage('Enter a station name', Colors.red);
+      return;
+    }
+
+    int stationCount = stations
+        .where((station) => station['line'].toString() == selectedLine)
+        .length;
+
+    await stationAction({
+      'action': 'add',
+      'name': name,
+      'line': selectedLine,
+      'position': (stationCount + 1).toString(),
+      'latitude': latitudeController.text.trim(),
+      'longitude': longitudeController.text.trim(),
+    });
+
+    stationController.clear();
+    latitudeController.clear();
+    longitudeController.clear();
+  }
+
+  Future<void> editStation(Map<String, dynamic> station) async {
+    final controller = TextEditingController(text: station['name'].toString());
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Station Name'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'Station Name',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, controller.text.trim());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AdminTheme.teal,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    if (newName == null) return;
+
+    await stationAction({
+      'action': 'update',
+      'id': station['id'].toString(),
+      'name': newName,
+      'position': station['position'].toString(),
+    });
+  }
+
+  Future<void> deleteStation(String stationId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete station?'),
+          content: const Text(
+            'This will also remove the station from saved stations.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await stationAction({'action': 'delete', 'id': stationId});
+    }
+  }
+
+  void showMessage(String message, Color color) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
 
   Widget lineButton(String lineName, Color color) {
     bool isSelected = selectedLine == lineName;
 
     return ElevatedButton(
-      onPressed: () => onLineSelected(lineName),
+      onPressed: () => setState(() => selectedLine = lineName),
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected ? color : Colors.white,
         foregroundColor: isSelected ? Colors.white : color,
@@ -48,8 +184,16 @@ class StationManagementScreen extends StatelessWidget {
   }
 
   @override
+  void dispose() {
+    stationController.dispose();
+    latitudeController.dispose();
+    longitudeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<dynamic> stations = managedStations
+    List<dynamic> lineStations = stations
         .where((station) => station['line'].toString() == selectedLine)
         .toList();
 
@@ -76,7 +220,7 @@ class StationManagementScreen extends StatelessWidget {
                 subtitle: 'Add, edit, or remove stations on this metro line.',
                 child: Column(
                   children: [
-                    ...List.generate(stations.length, (index) {
+                    ...List.generate(lineStations.length, (index) {
                       return Column(
                         children: [
                           Row(
@@ -97,27 +241,33 @@ class StationManagementScreen extends StatelessWidget {
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Text(
-                                  stations[index]['name'].toString(),
+                                  lineStations[index]['name'].toString(),
                                   style: const TextStyle(fontSize: 17),
                                 ),
                               ),
                               IconButton(
-                                onPressed: () => onEditStation(
-                                  Map<String, dynamic>.from(stations[index]),
-                                ),
+                                onPressed: () {
+                                  editStation(
+                                    Map<String, dynamic>.from(
+                                      lineStations[index],
+                                    ),
+                                  );
+                                },
                                 icon: const Icon(Icons.edit_outlined),
                                 color: AdminTheme.teal,
                               ),
                               IconButton(
-                                onPressed: () => onDeleteStation(
-                                  stations[index]['id'].toString(),
-                                ),
+                                onPressed: () {
+                                  deleteStation(
+                                    lineStations[index]['id'].toString(),
+                                  );
+                                },
                                 icon: const Icon(Icons.delete_outline),
                                 color: Colors.red,
                               ),
                             ],
                           ),
-                          if (index != stations.length - 1) const Divider(),
+                          if (index != lineStations.length - 1) const Divider(),
                         ],
                       );
                     }),
@@ -136,7 +286,7 @@ class StationManagementScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     TextField(
-                      controller: newStationController,
+                      controller: stationController,
                       decoration: const InputDecoration(
                         hintText: 'Station name, e.g. Burri Junction',
                         border: OutlineInputBorder(),
@@ -176,7 +326,7 @@ class StationManagementScreen extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: ElevatedButton.icon(
-                        onPressed: onAddStation,
+                        onPressed: addStation,
                         icon: const Icon(Icons.add),
                         label: const Text('Add Station'),
                         style: ElevatedButton.styleFrom(

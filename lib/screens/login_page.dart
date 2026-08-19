@@ -36,9 +36,8 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => AdminHomePage(
-              admin: Map<String, dynamic>.from(data['data']),
-            ),
+            builder: (context) =>
+                AdminHomePage(admin: Map<String, dynamic>.from(data['data'])),
           ),
         );
       } else {
@@ -88,18 +87,18 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-  width: 72,
-  height: 72,
-  decoration: const BoxDecoration(
-    color: AdminTheme.teal,
-    shape: BoxShape.circle,
-  ),
-  child: const Icon(
-    Icons.train_outlined,
-    color: Colors.white,
-    size: 38,
-  ),
-),
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(
+                  color: AdminTheme.teal,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.train_outlined,
+                  color: Colors.white,
+                  size: 38,
+                ),
+              ),
 
               const SizedBox(height: 18),
 
@@ -114,11 +113,7 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 8),
 
-              Container(
-                width: 130,
-                height: 3,
-                color: AdminTheme.gold,
-              ),
+              Container(width: 130, height: 3, color: AdminTheme.gold),
 
               const SizedBox(height: 14),
 
@@ -147,9 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                   filled: true,
                   fillColor: Color(0xFFF7F8F8),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(12),
-                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -178,9 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                   filled: true,
                   fillColor: Color(0xFFF7F8F8),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(12),
-                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -189,10 +180,7 @@ class _LoginPageState extends State<LoginPage> {
               if (errorMessage.isNotEmpty) ...[
                 const SizedBox(height: 14),
 
-                Text(
-                  errorMessage,
-                  style: const TextStyle(color: Colors.red),
-                ),
+                Text(errorMessage, style: const TextStyle(color: Colors.red)),
               ],
 
               const SizedBox(height: 28),
