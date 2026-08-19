@@ -6,6 +6,7 @@ class ApiService {
   static const String baseUrl = 'http://localhost/Rihla_BackEnd/api';
 
   static Future<Map<String, dynamic>> adminLogin({
+    
     required String email,
     required String password,
   }) async {
