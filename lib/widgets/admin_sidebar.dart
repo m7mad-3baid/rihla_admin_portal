@@ -5,11 +5,13 @@ import '../themes/admin_theme.dart';
 class AdminSidebar extends StatelessWidget {
   const AdminSidebar({
     super.key,
+    required this.adminName,
     required this.selectedPage,
     required this.onPageSelected,
     required this.onSignOut,
   });
 
+  final String adminName;
   final String selectedPage;
   final ValueChanged<String> onPageSelected;
   final VoidCallback onSignOut;
@@ -88,32 +90,26 @@ class AdminSidebar extends StatelessWidget {
           sidebarItem(Icons.settings_outlined, 'Preferences'),
           const Spacer(),
           const Divider(color: Colors.white24, height: 1),
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(20),
             child: Row(
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   backgroundColor: Color(0xFF317780),
-                  child: Text(
-                    'MK',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Icon(Icons.person, color: Colors.white),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mohammed Khalil',
-                      style: TextStyle(
+                      adminName,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
+                    const Text(
                       'Super Admin',
                       style: TextStyle(color: Colors.white60, fontSize: 12),
                     ),

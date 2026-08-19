@@ -651,6 +651,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       body: Row(
         children: [
           AdminSidebar(
+            adminName: widget.admin['name']?.toString() ?? 'Admin',
             selectedPage: selectedPage,
             onPageSelected: selectPage,
             onSignOut: signOut,
