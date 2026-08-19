@@ -6,7 +6,6 @@ class ApiService {
   static const String baseUrl = 'http://localhost/Rihla_BackEnd/api';
 
   static Future<Map<String, dynamic>> adminLogin({
-    
     required String email,
     required String password,
   }) async {
@@ -70,6 +69,7 @@ class ApiService {
   static Future<Map<String, dynamic>> stationAction(
     Map<String, String> body,
   ) async {
+    
     final response = await http.post(
       Uri.parse('$baseUrl/admin_stations.php'),
       body: body,

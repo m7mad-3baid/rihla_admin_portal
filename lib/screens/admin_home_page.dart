@@ -12,6 +12,7 @@ import 'ticket_pricing_screen.dart';
 import 'user_management_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
+
   const AdminHomePage({super.key, required this.admin});
 
   final Map<String, dynamic> admin;
@@ -21,10 +22,12 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
+
   String selectedPage = 'Dashboard';
   String selectedLine = 'Red';
   bool showingUserDetails = false;
   List<dynamic> managedStations = [];
+
   final TextEditingController newStationController = TextEditingController();
   final TextEditingController latitudeController = TextEditingController();
   final TextEditingController longitudeController = TextEditingController();
@@ -35,10 +38,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
     text: '2000',
   );
 
+
   List<dynamic> users = [];
   bool isUsersLoading = true;
   String usersError = '';
   String userSearch = '';
+
 
   Map<String, dynamic>? selectedUser;
   List<dynamic> selectedStations = [];
@@ -74,16 +79,20 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Future<void> loadStations() async {
     try {
       final data = await ApiService.getStations();
+
       if (data['success'] == true && mounted) {
+
         setState(() => managedStations = List<dynamic>.from(data['data']));
       }
     } catch (_) {}
   }
 
+
   Future<void> stationAction(Map<String, String> body) async {
     try {
       final data = await ApiService.stationAction(body);
       if (data['success'] == true) {
+        
         await loadStations();
         showMessage('Station updated successfully', Colors.green);
       } else {
@@ -95,6 +104,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Future<void> confirmDeleteStation(String stationId) async {
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -128,8 +138,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
 
     int stationCount = managedStations
-        .where((station) => station['line'].toString() == selectedLine)
-        .length;
+        .where((station) => station['line'].toString() == selectedLine).length;
 
     await stationAction({
       'action': 'add',

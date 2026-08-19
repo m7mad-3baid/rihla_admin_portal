@@ -13,30 +13,8 @@ class AdminSidebar extends StatelessWidget {
 
   final String adminName;
   final String selectedPage;
-  final ValueChanged<String> onPageSelected;
-  final VoidCallback onSignOut;
-
-  Widget sidebarItem(IconData icon, String title) {
-    bool isSelected = selectedPage == title;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        selected: isSelected,
-        selectedTileColor: const Color(0xFF317780),
-        leading: Icon(icon, color: Colors.white),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        onTap: () => onPageSelected(title),
-      ),
-    );
-  }
+  final Function(String) onPageSelected;
+  final Function() onSignOut;
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +28,17 @@ class AdminSidebar extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                const CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Color(0xFF317780),
-                  child: Icon(Icons.train_outlined, color: Colors.white),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF317780),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.train_outlined,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -83,20 +68,163 @@ class AdminSidebar extends StatelessWidget {
           ),
           const Divider(color: Colors.white24, height: 1),
           const SizedBox(height: 16),
-          sidebarItem(Icons.dashboard_outlined, 'Dashboard'),
-          sidebarItem(Icons.people_outline, 'Users'),
-          sidebarItem(Icons.location_on_outlined, 'Station Management'),
-          sidebarItem(Icons.confirmation_number_outlined, 'Ticket Pricing'),
-          sidebarItem(Icons.settings_outlined, 'Preferences'),
+          GestureDetector(
+            onTap: () {
+              onPageSelected('Dashboard');
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: selectedPage == 'Dashboard'
+                    ? const Color(0xFF317780)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.dashboard_outlined, color: Colors.white),
+                  SizedBox(width: 14),
+                  Text(
+                    'Dashboard',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              onPageSelected('Users');
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: selectedPage == 'Users'
+                    ? const Color(0xFF317780)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.people_outline, color: Colors.white),
+                  SizedBox(width: 14),
+                  Text(
+                    'Users',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              onPageSelected('Station Management');
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: selectedPage == 'Station Management'
+                    ? const Color(0xFF317780)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.location_on_outlined, color: Colors.white),
+                  SizedBox(width: 14),
+                  Text(
+                    'Station Management',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              onPageSelected('Ticket Pricing');
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: selectedPage == 'Ticket Pricing'
+                    ? const Color(0xFF317780)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.confirmation_number_outlined,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 14),
+                  Text(
+                    'Ticket Pricing',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              onPageSelected('Preferences');
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: selectedPage == 'Preferences'
+                    ? const Color(0xFF317780)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.settings_outlined, color: Colors.white),
+                  SizedBox(width: 14),
+                  Text(
+                    'Preferences',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const Spacer(),
           const Divider(color: Colors.white24, height: 1),
           Padding(
             padding: EdgeInsets.all(20),
             child: Row(
               children: [
-                const CircleAvatar(
-                  backgroundColor: Color(0xFF317780),
-                  child: Icon(Icons.person, color: Colors.white),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF317780),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white),
                 ),
                 const SizedBox(width: 10),
                 Column(
@@ -118,12 +246,23 @@ class AdminSidebar extends StatelessWidget {
               ],
             ),
           ),
-          TextButton.icon(
-            onPressed: onSignOut,
-            icon: const Icon(Icons.logout, color: Colors.white70),
-            label: const Text(
-              'Sign out',
-              style: TextStyle(color: Colors.white70),
+          GestureDetector(
+            onTap: () {
+              onSignOut();
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: const Row(
+                children: [
+                  Icon(Icons.logout, color: Colors.white70),
+                  SizedBox(width: 10),
+                  Text(
+                    'Sign out',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
