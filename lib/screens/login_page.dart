@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../themes/admin_theme.dart';
 import 'admin_home_page.dart';
 
 // ===================== LOGIN PAGE =====================
@@ -12,9 +13,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  static const Color teal = Color(0xFF005E66);
-  static const Color gold = Color(0xFF7C5700);
-
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -86,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const CircleAvatar(
                     radius: 36,
-                    backgroundColor: teal,
+                    backgroundColor: AdminTheme.teal,
                     child: Icon(
                       Icons.train_outlined,
                       color: Colors.white,
@@ -97,13 +95,13 @@ class _LoginPageState extends State<LoginPage> {
                   const Text(
                     'Rihla Admin',
                     style: TextStyle(
-                      color: teal,
+                      color: AdminTheme.teal,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Container(width: 130, height: 3, color: gold),
+                  Container(width: 130, height: 3, color: AdminTheme.gold),
                   const SizedBox(height: 14),
                   const Text(
                     'Metro operations management portal',
@@ -169,7 +167,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: ElevatedButton(
                       onPressed: isLoading ? null : login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: teal,
+                        backgroundColor: AdminTheme.teal,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                       ),

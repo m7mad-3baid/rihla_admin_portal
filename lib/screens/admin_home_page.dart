@@ -1,8 +1,15 @@
-﻿import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import 'login_page.dart';
+import 'package:flutter/material.dart';
 
-// ===================== ADMIN HOME =====================
+import '../services/api_service.dart';
+import '../widgets/admin_page_header.dart';
+import '../widgets/admin_sidebar.dart';
+import '../widgets/edit_station_dialog.dart';
+import '../widgets/edit_user_dialog.dart';
+import 'admin_preferences_screen.dart';
+import 'dashboard_screen.dart';
+import 'station_management_screen.dart';
+import 'ticket_pricing_screen.dart';
+import 'user_management_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key, required this.admin});
@@ -14,9 +21,6 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  final Color teal = const Color(0xFF005E66);
-  final Color gold = const Color(0xFF7C5700);
-
   String selectedPage = 'Dashboard';
   String selectedLine = 'Red';
   bool showingUserDetails = false;
@@ -114,6 +118,30 @@ class _AdminHomePageState extends State<AdminHomePage> {
     if (confirmed == true) {
       await stationAction({'action': 'delete', 'id': stationId});
     }
+  }
+
+  Future<void> addStation() async {
+    String name = newStationController.text.trim();
+    if (name.isEmpty) {
+      showMessage('Enter a station name', Colors.red);
+      return;
+    }
+
+    int stationCount = managedStations
+        .where((station) => station['line'].toString() == selectedLine)
+        .length;
+
+    await stationAction({
+      'action': 'add',
+      'name': name,
+      'line': selectedLine,
+      'position': (stationCount + 1).toString(),
+      'latitude': latitudeController.text.trim(),
+      'longitude': longitudeController.text.trim(),
+    });
+    newStationController.clear();
+    latitudeController.clear();
+    longitudeController.clear();
   }
 
   Future<void> saveTicketPrices() async {
@@ -445,834 +473,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 
-  void showMessage(String message, Color color) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
-  }
-
-  @override
-  void dispose() {
-    globalTitleController.dispose();
-    globalMessageController.dispose();
-    newStationController.dispose();
-    latitudeController.dispose();
-    longitudeController.dispose();
-    twoHoursPriceController.dispose();
-    sevenDaysPriceController.dispose();
-    adminNameController.dispose();
-    adminEmailController.dispose();
-    currentPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          buildSidebar(),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildPageHeader(),
-                Expanded(child: buildPageContent()),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildSidebar() {
-    return Container(
-      width: 240,
-      color: teal,
-      child: Column(
-        children: [
-          Container(
-            height: 105,
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Color(0xFF317780),
-                  child: Icon(Icons.train_outlined, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Rihla',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'ADMIN',
-                      style: TextStyle(
-                        color: gold,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Divider(color: Colors.white24, height: 1),
-          const SizedBox(height: 16),
-          sidebarItem(Icons.dashboard_outlined, 'Dashboard'),
-          sidebarItem(Icons.people_outline, 'Users'),
-          sidebarItem(Icons.location_on_outlined, 'Station Management'),
-          sidebarItem(Icons.confirmation_number_outlined, 'Ticket Pricing'),
-          sidebarItem(Icons.settings_outlined, 'Preferences'),
-          const Spacer(),
-          const Divider(color: Colors.white24, height: 1),
-          const Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Color(0xFF317780),
-                  child: Text(
-                    'MK',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Mohammed Khalil',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Super Admin',
-                      style: TextStyle(color: Colors.white60, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-                (route) => false,
-              );
-            },
-            icon: const Icon(Icons.logout, color: Colors.white70),
-            label: const Text(
-              'Sign out',
-              style: TextStyle(color: Colors.white70),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
-  }
-
-  Widget sidebarItem(IconData icon, String title) {
-    bool isSelected = selectedPage == title;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        selected: isSelected,
-        selectedTileColor: const Color(0xFF317780),
-        leading: Icon(icon, color: Colors.white),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        onTap: () {
-          setState(() {
-            selectedPage = title;
-            showingUserDetails = false;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget buildPageHeader() {
-    return Container(
-      width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(40, 25, 40, 25),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            selectedPage,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            pageSubtitle(),
-            style: const TextStyle(color: Colors.blueGrey, fontSize: 15),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String pageSubtitle() {
-    if (selectedPage == 'Dashboard') {
-      return 'Manage Rihla users, notifications, and metro operations.';
-    }
-
-    if (selectedPage == 'Users') {
-      return 'View and manage registered Rihla users.';
-    }
-
-    if (selectedPage == 'Station Management') {
-      return 'Add, edit, or remove stations on each metro line.';
-    }
-
-    if (selectedPage == 'Ticket Pricing') {
-      return 'Manage the prices of available Rihla tickets.';
-    }
-
-    return 'Manage your administrator account and password.';
-  }
-
-  Widget buildPageContent() {
-    if (selectedPage == 'Dashboard') {
-      return buildDashboardPage();
-    }
-
-    if (selectedPage == 'Users') {
-      if (showingUserDetails) {
-        return buildUserDetailsPage();
-      }
-
-      return buildUsersPage();
-    }
-
-    if (selectedPage == 'Station Management') {
-      return buildStationManagementPage();
-    }
-
-    if (selectedPage == 'Ticket Pricing') {
-      return buildTicketPricingPage();
-    }
-
-    return buildPreferencesPage();
-  }
-
-  // ===================== DASHBOARD =====================
-
-  Widget buildDashboardPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            onChanged: (value) =>
-                setState(() => userSearch = value.trim().toLowerCase()),
-            decoration: InputDecoration(
-              hintText: 'Search by name, email, or user ID',
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 22),
-          dashboardCard(
-            title: 'All Users',
-            subtitle: 'Registered Rihla users',
-            child: isUsersLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : filteredUsers.isEmpty
-                ? const Text('No users found.')
-                : Column(
-                    children: [
-                      const Row(
-                        children: [
-                          Expanded(flex: 3, child: Text('User')),
-                          Expanded(flex: 3, child: Text('Email')),
-                          Expanded(flex: 2, child: Text('Status')),
-                          Expanded(child: Text('Stations')),
-                          Expanded(child: Text('Tickets')),
-                        ],
-                      ),
-                      const Divider(),
-                      ...filteredUsers.take(5).map((user) {
-                        bool isStudent = user['is_student'].toString() == '1';
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: TextButton(
-                                  onPressed: () => loadUserDetails(
-                                    Map<String, dynamic>.from(user),
-                                  ),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(user['name'].toString()),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Text(user['email'].toString()),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Text(isStudent ? 'Student' : 'Regular'),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  user['saved_stations_count'].toString(),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(user['tickets_count'].toString()),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-          ),
-          const SizedBox(height: 22),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: buildMetroStatusCard()),
-              const SizedBox(width: 22),
-              Expanded(child: buildGlobalNotificationCard()),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildMetroStatusCard() {
-    return dashboardCard(
-      title: 'Global Metro Status',
-      subtitle: 'Update the current status for each metro line.',
-      child: Column(
-        children: [
-          DropdownButtonFormField<String>(
-            value: metroLine,
-            decoration: const InputDecoration(
-              labelText: 'Metro Line',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'Red', child: Text('Red Line')),
-              DropdownMenuItem(value: 'Green', child: Text('Green Line')),
-              DropdownMenuItem(value: 'Blue', child: Text('Blue Line')),
-            ],
-            onChanged: (value) => setState(() {
-              metroLine = value!;
-              metroStatus = metroStatuses[metroLine] ?? 'Normal';
-            }),
-          ),
-          const SizedBox(height: 14),
-          DropdownButtonFormField<String>(
-            value: metroStatus,
-            decoration: const InputDecoration(
-              labelText: 'Status',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'Normal', child: Text('Normal')),
-              DropdownMenuItem(value: 'Delayed', child: Text('Delayed')),
-              DropdownMenuItem(value: 'Closed', child: Text('Closed')),
-            ],
-            onChanged: (value) => setState(() => metroStatus = value!),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ElevatedButton(
-              onPressed: updateMetroStatus,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: teal,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Update Status'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildGlobalNotificationCard() {
-    return dashboardCard(
-      title: 'Send Global Notification',
-      subtitle: 'Send a message to every Rihla user.',
-      child: Column(
-        children: [
-          TextField(
-            controller: globalTitleController,
-            decoration: const InputDecoration(
-              labelText: 'Title',
-              hintText: 'e.g. Service Update',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: globalMessageController,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Message',
-              hintText: 'Write your message here...',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                sendNotification();
-              },
-              icon: const Icon(Icons.send),
-              label: const Text('Send Notification'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: teal,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===================== USERS PAGE =====================
-
-  Widget buildUsersPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Card(
-        elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            children: [
-              TextField(
-                onChanged: (value) =>
-                    setState(() => userSearch = value.trim().toLowerCase()),
-                decoration: InputDecoration(
-                  hintText: 'Search by name, email, or user ID',
-                  prefixIcon: Icon(Icons.search),
-                  filled: true,
-                  fillColor: Color(0xFFF7F8F8),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Row(
-                children: [
-                  Expanded(flex: 3, child: Text('User')),
-                  Expanded(flex: 3, child: Text('Email')),
-                  Expanded(flex: 2, child: Text('Status')),
-                  Expanded(flex: 2, child: Text('Balance')),
-                  Expanded(child: Text('Stations')),
-                  Expanded(child: Text('Tickets')),
-                  Expanded(child: Text('Action')),
-                ],
-              ),
-              const Divider(),
-              if (isUsersLoading)
-                const Padding(
-                  padding: EdgeInsets.all(30),
-                  child: CircularProgressIndicator(),
-                )
-              else if (usersError.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Text(
-                    usersError,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                )
-              else if (filteredUsers.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Text('No users found.'),
-                )
-              else
-                ...filteredUsers.map((user) {
-                  return usersPageRow(Map<String, dynamic>.from(user));
-                }),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget usersPageRow(Map<String, dynamic> user) {
-    String name = user['name'].toString();
-    String email = user['email'].toString();
-    String balance = '${user['balance']} SDG';
-    String stations = user['saved_stations_count'].toString();
-    String tickets = user['tickets_count'].toString();
-
-    bool isStudent = user['is_student'].toString() == '1';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Text(
-              name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Expanded(flex: 3, child: Text(email)),
-          Expanded(
-            flex: 2,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isStudent
-                    ? const Color(0xFFFFF1D6)
-                    : const Color(0xFFEFF1F3),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                isStudent ? 'Student' : 'Regular',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isStudent ? gold : Colors.blueGrey,
-                ),
-              ),
-            ),
-          ),
-          Expanded(flex: 2, child: Text(balance)),
-          Expanded(child: Text(stations)),
-          Expanded(child: Text(tickets)),
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () {
-                loadUserDetails(user);
-              },
-              child: const Text('View'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===================== USER DETAILS =====================
-
-  Widget buildUserDetailsPage() {
-    if (isUserDetailsLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (userDetailsError.isNotEmpty) {
-      return Center(
-        child: Text(
-          userDetailsError,
-          style: const TextStyle(color: Colors.red),
-        ),
-      );
-    }
-
-    String userName = selectedUser?['name'].toString() ?? 'Unknown User';
-    String userEmail = selectedUser?['email'].toString() ?? '';
-    String userId = selectedUser?['id'].toString() ?? '';
-    String userBalance = selectedUser?['balance'].toString() ?? '0';
-    String studentId = selectedUser?['student_id']?.toString() ?? '';
-
-    bool isStudent = selectedUser?['is_student'].toString() == '1';
-
-    String initials = userName
-        .trim()
-        .split(' ')
-        .where((word) => word.isNotEmpty)
-        .map((word) => word[0])
-        .take(2)
-        .join()
-        .toUpperCase();
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Center(
-        child: SizedBox(
-          width: 850,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    showingUserDetails = false;
-                  });
-                },
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to Users'),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                elevation: 1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(22),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: const Color(0xFFE1F0F2),
-                        child: Text(
-                          initials,
-                          style: const TextStyle(
-                            color: Color(0xFF005E66),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userName,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              userEmail,
-                              style: const TextStyle(color: Colors.blueGrey),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'User ID: $userId | Balance: $userBalance SDG',
-                            ),
-                            if (studentId.isNotEmpty)
-                              Text('Student ID: $studentId'),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isStudent
-                                  ? const Color(0xFFFFF1D6)
-                                  : const Color(0xFFEFF1F3),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              isStudent ? 'Student' : 'Regular',
-                              style: TextStyle(
-                                color: isStudent ? gold : Colors.blueGrey,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          OutlinedButton(
-                            onPressed: showEditUserDialog,
-                            child: const Text('Edit User'),
-                          ),
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: confirmRemoveUser,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                            icon: const Icon(Icons.person_remove_outlined),
-                            label: const Text('Remove User'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              dashboardCard(
-                title: 'Saved Stations',
-                subtitle: 'Stations saved by this user.',
-                child: selectedStations.isEmpty
-                    ? const Text(
-                        'This user has no saved stations.',
-                        style: TextStyle(color: Colors.blueGrey),
-                      )
-                    : Column(
-                        children: selectedStations.map((station) {
-                          String line =
-                              station['line']?.toString() ?? 'Metro Line';
-
-                          return Column(
-                            children: [
-                              ListTile(
-                                leading: Icon(
-                                  Icons.location_on,
-                                  color: lineColor(line),
-                                ),
-                                title: Text(station['name'].toString()),
-                                subtitle: Text(line),
-                                trailing: IconButton(
-                                  tooltip: 'Remove saved station',
-                                  onPressed: () {
-                                    confirmRemoveSavedStation(
-                                      station['id'].toString(),
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ),
-                              const Divider(),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-              ),
-              const SizedBox(height: 20),
-              dashboardCard(
-                title: 'Purchased Tickets',
-                subtitle: 'Ticket information is read-only.',
-                child: selectedTickets.isEmpty
-                    ? const Text(
-                        'This user has not purchased any tickets.',
-                        style: TextStyle(color: Colors.blueGrey),
-                      )
-                    : Column(
-                        children: [
-                          const Row(
-                            children: [
-                              Expanded(flex: 2, child: Text('Ticket')),
-                              Expanded(child: Text('Price')),
-                              Expanded(flex: 2, child: Text('Purchased')),
-                              Expanded(flex: 2, child: Text('Expires')),
-                              Expanded(child: Text('Status')),
-                            ],
-                          ),
-                          const Divider(),
-                          ...selectedTickets.map((ticket) {
-                            String expiresAt = ticket['expires_at'].toString();
-
-                            bool isActive =
-                                DateTime.tryParse(
-                                  expiresAt,
-                                )?.isAfter(DateTime.now()) ??
-                                false;
-
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      ticket['ticket_name']?.toString() ??
-                                          'Ticket',
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Text('${ticket['price']} SDG'),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      dateOnly(
-                                        ticket['purchased_at'].toString(),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(dateOnly(expiresAt)),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      isActive ? 'Active' : 'Expired',
-                                      style: TextStyle(
-                                        color: isActive
-                                            ? Colors.green
-                                            : Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ===================== USER EDIT DIALOG =====================
-
   Future<void> updateUser({
     required int id,
     required String name,
@@ -1314,634 +514,158 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   void showEditUserDialog() {
-    TextEditingController nameController = TextEditingController(
-      text: selectedUser?['name'].toString() ?? '',
-    );
-
-    TextEditingController emailController = TextEditingController(
-      text: selectedUser?['email'].toString() ?? '',
-    );
-
-    bool isStudent = selectedUser?['is_student'].toString() == '1';
-    TextEditingController passwordController = TextEditingController();
-
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: const Text('Edit User Information'),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            content: SizedBox(
-              width: 400,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Full Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      hintText: 'Leave empty to keep current password',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: isStudent ? 'Student' : 'Regular',
-                    decoration: const InputDecoration(
-                      labelText: 'Student Status',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Student',
-                        child: Text('Student'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Regular',
-                        child: Text('Regular'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setDialogState(() {
-                        isStudent = value == 'Student';
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext);
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  int id =
-                      int.tryParse(selectedUser?['id'].toString() ?? '') ?? 0;
-                  Navigator.pop(dialogContext);
-                  await updateUser(
-                    id: id,
-                    name: nameController.text.trim(),
-                    email: emailController.text.trim(),
-                    password: passwordController.text,
-                    isStudent: isStudent,
-                  );
-                },
-                icon: const Icon(Icons.save),
-                label: const Text('Save Changes'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: teal,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ===================== STATION MANAGEMENT =====================
-
-  Widget buildStationManagementPage() {
-    List<dynamic> stations = managedStations
-        .where((station) => station['line'].toString() == selectedLine)
-        .toList();
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Center(
-        child: SizedBox(
-          width: 900,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  lineButton('Red', Colors.red),
-                  const SizedBox(width: 12),
-                  lineButton('Green', Colors.green),
-                  const SizedBox(width: 12),
-                  lineButton('Blue', Colors.blue),
-                ],
-              ),
-              const SizedBox(height: 24),
-              dashboardCard(
-                title: '$selectedLine Stations',
-                subtitle: 'Add, edit, or remove stations on this metro line.',
-                child: Column(
-                  children: [
-                    ...List.generate(stations.length, (index) {
-                      return Column(
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 16,
-                                backgroundColor: lineColor(
-                                  selectedLine,
-                                ).withOpacity(0.15),
-                                child: Text(
-                                  '${index + 1}',
-                                  style: TextStyle(
-                                    color: lineColor(selectedLine),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  stations[index]['name'].toString(),
-                                  style: const TextStyle(fontSize: 17),
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  showEditStationDialog(stations[index]);
-                                },
-                                icon: const Icon(Icons.edit_outlined),
-                                color: teal,
-                              ),
-                              IconButton(
-                                onPressed: () => confirmDeleteStation(
-                                  stations[index]['id'].toString(),
-                                ),
-                                icon: const Icon(Icons.delete_outline),
-                                color: Colors.red,
-                              ),
-                            ],
-                          ),
-                          if (index != stations.length - 1) const Divider(),
-                        ],
-                      );
-                    }),
-                    const SizedBox(height: 20),
-                    const Divider(),
-                    const SizedBox(height: 10),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'ADD STATION',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: newStationController,
-                      decoration: const InputDecoration(
-                        hintText: 'Station name, e.g. Burri Junction',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: latitudeController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'Latitude (optional)',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: longitudeController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'Longitude (optional)',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          String name = newStationController.text.trim();
-                          if (name.isEmpty) {
-                            showMessage('Enter a station name', Colors.red);
-                            return;
-                          }
-                          await stationAction({
-                            'action': 'add',
-                            'name': name,
-                            'line': selectedLine,
-                            'position': (stations.length + 1).toString(),
-                            'latitude': latitudeController.text.trim(),
-                            'longitude': longitudeController.text.trim(),
-                          });
-                          newStationController.clear();
-                          latitudeController.clear();
-                          longitudeController.clear();
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Station'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: teal,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget lineButton(String lineName, Color color) {
-    bool isSelected = selectedLine == lineName;
-
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          selectedLine = lineName;
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? color : Colors.white,
-        foregroundColor: isSelected ? Colors.white : color,
-        elevation: 0,
-        side: BorderSide(color: color),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      ),
-      child: Text(
-        lineName,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
+      builder: (context) =>
+          EditUserDialog(user: selectedUser, onSave: updateUser),
     );
   }
 
   void showEditStationDialog(Map<String, dynamic> station) {
-    TextEditingController stationController = TextEditingController(
-      text: station['name'].toString(),
-    );
-
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Edit Station Name'),
-          content: TextField(
-            controller: stationController,
-            decoration: const InputDecoration(
-              labelText: 'Station Name',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            OutlinedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await stationAction({
-                  'action': 'update',
-                  'id': station['id'].toString(),
-                  'name': stationController.text.trim(),
-                  'position': station['position'].toString(),
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: teal,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
+      builder: (context) => EditStationDialog(
+        station: station,
+        onSave: (name) => stationAction({
+          'action': 'update',
+          'id': station['id'].toString(),
+          'name': name,
+          'position': station['position'].toString(),
+        }),
+      ),
     );
   }
 
-  // ===================== TICKET PRICING =====================
+  void showMessage(String message, Color color) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
 
-  Widget buildTicketPricingPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Center(
-        child: SizedBox(
-          width: 700,
-          child: dashboardCard(
-            title: 'Ticket Pricing',
-            subtitle:
-                'Set the base price for each ticket type in Sudanese Pounds.',
+  void selectPage(String page) {
+    setState(() {
+      selectedPage = page;
+      showingUserDetails = false;
+    });
+  }
+
+  void signOut() {
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
+  Widget buildPageContent() {
+    if (selectedPage == 'Dashboard') {
+      return DashboardScreen(
+        filteredUsers: filteredUsers,
+        isUsersLoading: isUsersLoading,
+        onSearchChanged: (value) => setState(() => userSearch = value),
+        onUserSelected: loadUserDetails,
+        metroLine: metroLine,
+        metroStatus: metroStatus,
+        onMetroLineChanged: (value) => setState(() {
+          metroLine = value;
+          metroStatus = metroStatuses[metroLine] ?? 'Normal';
+        }),
+        onMetroStatusChanged: (value) => setState(() => metroStatus = value),
+        onUpdateMetroStatus: updateMetroStatus,
+        globalTitleController: globalTitleController,
+        globalMessageController: globalMessageController,
+        onSendNotification: sendNotification,
+      );
+    }
+
+    if (selectedPage == 'Users') {
+      return UserManagementScreen(
+        showingUserDetails: showingUserDetails,
+        isUsersLoading: isUsersLoading,
+        usersError: usersError,
+        filteredUsers: filteredUsers,
+        onSearchChanged: (value) => setState(() => userSearch = value),
+        onUserSelected: loadUserDetails,
+        selectedUser: selectedUser,
+        selectedStations: selectedStations,
+        selectedTickets: selectedTickets,
+        isUserDetailsLoading: isUserDetailsLoading,
+        userDetailsError: userDetailsError,
+        onBackToUsers: () => setState(() => showingUserDetails = false),
+        onEditUser: showEditUserDialog,
+        onRemoveUser: confirmRemoveUser,
+        onRemoveSavedStation: confirmRemoveSavedStation,
+      );
+    }
+
+    if (selectedPage == 'Station Management') {
+      return StationManagementScreen(
+        selectedLine: selectedLine,
+        managedStations: managedStations,
+        newStationController: newStationController,
+        latitudeController: latitudeController,
+        longitudeController: longitudeController,
+        onLineSelected: (value) => setState(() => selectedLine = value),
+        onEditStation: showEditStationDialog,
+        onDeleteStation: confirmDeleteStation,
+        onAddStation: addStation,
+      );
+    }
+
+    if (selectedPage == 'Ticket Pricing') {
+      return TicketPricingScreen(
+        twoHoursPriceController: twoHoursPriceController,
+        sevenDaysPriceController: sevenDaysPriceController,
+        onSavePrices: saveTicketPrices,
+      );
+    }
+
+    return AdminPreferencesScreen(
+      admin: widget.admin,
+      adminNameController: adminNameController,
+      adminEmailController: adminEmailController,
+      currentPasswordController: currentPasswordController,
+      newPasswordController: newPasswordController,
+      confirmPasswordController: confirmPasswordController,
+      onUpdateAdminProfile: updateAdminProfile,
+      onChangeAdminPassword: changeAdminPassword,
+    );
+  }
+
+  @override
+  void dispose() {
+    globalTitleController.dispose();
+    globalMessageController.dispose();
+    newStationController.dispose();
+    latitudeController.dispose();
+    longitudeController.dispose();
+    twoHoursPriceController.dispose();
+    sevenDaysPriceController.dispose();
+    adminNameController.dispose();
+    adminEmailController.dispose();
+    currentPasswordController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Row(
+        children: [
+          AdminSidebar(
+            selectedPage: selectedPage,
+            onPageSelected: selectPage,
+            onSignOut: signOut,
+          ),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                pricingRow(
-                  title: '2-Hours Ticket',
-                  description: 'Valid for two hours after purchase.',
-                  currentPrice: '200',
-                  controller: twoHoursPriceController,
-                ),
-                const Divider(height: 32),
-                pricingRow(
-                  title: '7-Days Ticket',
-                  description: 'Valid for seven days after purchase.',
-                  currentPrice: '2000',
-                  controller: sevenDaysPriceController,
-                ),
-                const SizedBox(height: 24),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: ElevatedButton.icon(
-                    onPressed: saveTicketPrices,
-                    icon: const Icon(Icons.save),
-                    label: const Text('Save Prices'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: teal,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ),
+                AdminPageHeader(selectedPage: selectedPage),
+                Expanded(child: buildPageContent()),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
-  }
-
-  Widget pricingRow({
-    required String title,
-    required String description,
-    required String currentPrice,
-    required TextEditingController controller,
-  }) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: const TextStyle(color: Colors.blueGrey, fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          width: 150,
-          child: TextFormField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              suffixText: 'SDG',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===================== PREFERENCES =====================
-
-  Widget buildPreferencesPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: SizedBox(
-        width: 600,
-        child: Column(
-          children: [
-            dashboardCard(
-              title: 'Admin Account',
-              subtitle: 'Manage your administrator account information.',
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 25,
-                        backgroundColor: Color(0xFFE1F0F2),
-                        child: Text(
-                          'MK',
-                          style: TextStyle(
-                            color: Color(0xFF005E66),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.admin['name']?.toString() ?? 'Admin',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            widget.admin['email']?.toString() ?? '',
-                            style: TextStyle(color: Colors.blueGrey),
-                          ),
-                          Text(
-                            'Super Admin',
-                            style: TextStyle(
-                              color: Colors.blueGrey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: adminNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Full Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: adminEmailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ElevatedButton.icon(
-                      onPressed: updateAdminProfile,
-                      icon: const Icon(Icons.save),
-                      label: const Text('Save Changes'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: teal,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            dashboardCard(
-              title: 'Change Password',
-              subtitle: 'Use your current password to set a new password.',
-              child: Column(
-                children: [
-                  TextField(
-                    controller: currentPasswordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Current Password',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: newPasswordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'New Password',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: confirmPasswordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Confirm New Password',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ElevatedButton.icon(
-                      onPressed: changeAdminPassword,
-                      icon: const Icon(Icons.lock_reset),
-                      label: const Text('Update Password'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: teal,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ===================== SHARED HELPERS =====================
-
-  Widget dashboardCard({
-    required String title,
-    required String subtitle,
-    required Widget child,
-  }) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(color: Colors.blueGrey, fontSize: 13),
-            ),
-            const SizedBox(height: 18),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color lineColor(String line) {
-    String lowerLine = line.toLowerCase();
-
-    if (lowerLine.contains('red')) {
-      return Colors.red;
-    }
-
-    if (lowerLine.contains('green')) {
-      return Colors.green;
-    }
-
-    return Colors.blue;
-  }
-
-  String dateOnly(String date) {
-    if (date.contains(' ')) {
-      return date.split(' ').first;
-    }
-
-    return date;
   }
 }

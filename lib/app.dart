@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'screens/login_page.dart';
+import 'themes/admin_theme.dart';
 
 class RihlaAdminApp extends StatelessWidget {
   const RihlaAdminApp({super.key});
@@ -10,11 +11,9 @@ class RihlaAdminApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Rihla Admin',
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFFF7F8F8),
-        useMaterial3: true,
-      ),
+      theme: AdminTheme.lightTheme,
       home: const LoginPage(),
+      routes: {'/login': (context) => const LoginPage()},
     );
   }
 }
