@@ -87,15 +87,19 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircleAvatar(
-                radius: 36,
-                backgroundColor: AdminTheme.teal,
-                child: Icon(
-                  Icons.train_outlined,
-                  color: Colors.white,
-                  size: 38,
-                ),
-              ),
+              Container(
+  width: 72,
+  height: 72,
+  decoration: const BoxDecoration(
+    color: AdminTheme.teal,
+    shape: BoxShape.circle,
+  ),
+  child: const Icon(
+    Icons.train_outlined,
+    color: Colors.white,
+    size: 38,
+  ),
+),
 
               const SizedBox(height: 18),
 
