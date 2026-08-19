@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
-import '../themes/admin_theme.dart';
 import 'admin_home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -68,6 +67,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F8F8),
       body: Center(
         child: Container(
           width: 460,
@@ -90,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                 width: 72,
                 height: 72,
                 decoration: const BoxDecoration(
-                  color: AdminTheme.teal,
+                  color: Color(0xFF005E66),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -105,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
               const Text(
                 'Rihla Admin',
                 style: TextStyle(
-                  color: AdminTheme.teal,
+                  color: Color(0xFF005E66),
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 8),
 
-              Container(width: 130, height: 3, color: AdminTheme.gold),
+              Container(width: 130, height: 3, color: const Color(0xFF7C5700)),
 
               const SizedBox(height: 14),
 
@@ -190,7 +190,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: ElevatedButton(
                   onPressed: isLoading ? null : login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AdminTheme.teal,
+                    backgroundColor: const Color(0xFF005E66),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                   ),

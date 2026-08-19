@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
-import '../themes/admin_theme.dart';
 import '../widgets/admin_card.dart';
 
 class TicketPricingScreen extends StatefulWidget {
@@ -72,48 +71,6 @@ class _TicketPricingScreenState extends State<TicketPricingScreen> {
     ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
-  Widget priceRow(
-    String title,
-    String description,
-    TextEditingController controller,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: const TextStyle(color: Colors.blueGrey, fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          width: 150,
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              suffixText: 'SDG',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   void dispose() {
     twoHoursController.dispose();
@@ -123,39 +80,122 @@ class _TicketPricingScreenState extends State<TicketPricingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Center(
-        child: SizedBox(
-          width: 700,
-          child: AdminCard(
-            title: 'Ticket Pricing',
-            subtitle:
-                'Set the base price for each ticket type in Sudanese Pounds.',
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F8F8),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text('Ticket Pricing'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: Center(
+          child: SizedBox(
+            width: 700,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                priceRow(
-                  '2-Hours Ticket',
-                  'Valid for two hours after purchase.',
-                  twoHoursController,
+                const Text(
+                  'Manage the prices of available Rihla tickets.',
+                  style: TextStyle(color: Colors.blueGrey, fontSize: 16),
                 ),
-                const Divider(height: 32),
-                priceRow(
-                  '7-Days Ticket',
-                  'Valid for seven days after purchase.',
-                  sevenDaysController,
-                ),
-                const SizedBox(height: 24),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: ElevatedButton.icon(
-                    onPressed: savePrices,
-                    icon: const Icon(Icons.save),
-                    label: const Text('Save Prices'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AdminTheme.teal,
-                      foregroundColor: Colors.white,
-                    ),
+                const SizedBox(height: 22),
+                AdminCard(
+                  title: 'Ticket Pricing',
+                  subtitle:
+                      'Set the base price for each ticket type in Sudanese Pounds.',
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '2-Hours Ticket',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Valid for two hours after purchase.',
+                                  style: TextStyle(
+                                    color: Colors.blueGrey,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 150,
+                            child: TextField(
+                              controller: twoHoursController,
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                suffixText: 'SDG',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 32),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '7-Days Ticket',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Valid for seven days after purchase.',
+                                  style: TextStyle(
+                                    color: Colors.blueGrey,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 150,
+                            child: TextField(
+                              controller: sevenDaysController,
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                suffixText: 'SDG',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ElevatedButton.icon(
+                          onPressed: savePrices,
+                          icon: const Icon(Icons.save),
+                          label: const Text('Save Prices'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF005E66),
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../helpers/admin_formatters.dart';
 import '../services/api_service.dart';
-import '../themes/admin_theme.dart';
 import '../widgets/admin_card.dart';
 
 class StationManagementScreen extends StatefulWidget {
@@ -107,7 +106,7 @@ class _StationManagementScreenState extends State<StationManagementScreen> {
                 Navigator.pop(context, controller.text.trim());
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AdminTheme.teal,
+                backgroundColor: const Color(0xFF005E66),
                 foregroundColor: Colors.white,
               ),
               child: const Text('Save'),
@@ -197,148 +196,163 @@ class _StationManagementScreenState extends State<StationManagementScreen> {
         .where((station) => station['line'].toString() == selectedLine)
         .toList();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: Center(
-        child: SizedBox(
-          width: 900,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  lineButton('Red', Colors.red),
-                  const SizedBox(width: 12),
-                  lineButton('Green', Colors.green),
-                  const SizedBox(width: 12),
-                  lineButton('Blue', Colors.blue),
-                ],
-              ),
-              const SizedBox(height: 24),
-              AdminCard(
-                title: '$selectedLine Stations',
-                subtitle: 'Add, edit, or remove stations on this metro line.',
-                child: Column(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F8F8),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text('Station Management'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: Center(
+          child: SizedBox(
+            width: 900,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Add, edit, or remove stations on each metro line.',
+                  style: TextStyle(color: Colors.blueGrey, fontSize: 16),
+                ),
+                const SizedBox(height: 22),
+                Row(
                   children: [
-                    ...List.generate(lineStations.length, (index) {
-                      return Column(
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 16,
-                                backgroundColor: metroLineColor(
-                                  selectedLine,
-                                ).withOpacity(0.15),
-                                child: Text(
-                                  '${index + 1}',
-                                  style: TextStyle(
-                                    color: metroLineColor(selectedLine),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  lineStations[index]['name'].toString(),
-                                  style: const TextStyle(fontSize: 17),
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  editStation(
-                                    Map<String, dynamic>.from(
-                                      lineStations[index],
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.edit_outlined),
-                                color: AdminTheme.teal,
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  deleteStation(
-                                    lineStations[index]['id'].toString(),
-                                  );
-                                },
-                                icon: const Icon(Icons.delete_outline),
-                                color: Colors.red,
-                              ),
-                            ],
-                          ),
-                          if (index != lineStations.length - 1) const Divider(),
-                        ],
-                      );
-                    }),
-                    const SizedBox(height: 20),
-                    const Divider(),
-                    const SizedBox(height: 10),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'ADD STATION',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueGrey,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: stationController,
-                      decoration: const InputDecoration(
-                        hintText: 'Station name, e.g. Burri Junction',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: latitudeController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'Latitude (optional)',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: longitudeController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'Longitude (optional)',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ElevatedButton.icon(
-                        onPressed: addStation,
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Station'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AdminTheme.teal,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
+                    lineButton('Red', Colors.red),
+                    const SizedBox(width: 12),
+                    lineButton('Green', Colors.green),
+                    const SizedBox(width: 12),
+                    lineButton('Blue', Colors.blue),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                AdminCard(
+                  title: '$selectedLine Stations',
+                  subtitle: 'Add, edit, or remove stations on this metro line.',
+                  child: Column(
+                    children: [
+                      ...List.generate(lineStations.length, (index) {
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: metroLineColor(
+                                    selectedLine,
+                                  ).withOpacity(0.15),
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                      color: metroLineColor(selectedLine),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    lineStations[index]['name'].toString(),
+                                    style: const TextStyle(fontSize: 17),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    editStation(
+                                      Map<String, dynamic>.from(
+                                        lineStations[index],
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.edit_outlined),
+                                  color: const Color(0xFF005E66),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    deleteStation(
+                                      lineStations[index]['id'].toString(),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.delete_outline),
+                                  color: Colors.red,
+                                ),
+                              ],
+                            ),
+                            if (index != lineStations.length - 1)
+                              const Divider(),
+                          ],
+                        );
+                      }),
+                      const SizedBox(height: 20),
+                      const Divider(),
+                      const SizedBox(height: 10),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'ADD STATION',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueGrey,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: stationController,
+                        decoration: const InputDecoration(
+                          hintText: 'Station name, e.g. Burri Junction',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: latitudeController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                hintText: 'Latitude (optional)',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: longitudeController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                hintText: 'Longitude (optional)',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ElevatedButton.icon(
+                          onPressed: addStation,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Station'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF005E66),
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

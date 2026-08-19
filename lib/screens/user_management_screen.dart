@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../helpers/admin_formatters.dart';
 import '../services/api_service.dart';
-import '../themes/admin_theme.dart';
 import '../widgets/admin_card.dart';
 
 class UserManagementScreen extends StatefulWidget {
-  const UserManagementScreen({super.key, this.initialUser});
-
-  final Map<String, dynamic>? initialUser;
+  const UserManagementScreen({super.key});
 
   @override
   State<UserManagementScreen> createState() => _UserManagementScreenState();
@@ -18,7 +15,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   List<dynamic> users = [];
   bool isUsersLoading = true;
   String usersError = '';
-  String search = '';
 
   bool showingUserDetails = false;
   Map<String, dynamic>? selectedUser;
@@ -31,10 +27,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   void initState() {
     super.initState();
     loadUsers();
-
-    if (widget.initialUser != null) {
-      loadUserDetails(widget.initialUser!);
-    }
   }
 
   Future<void> loadUsers() async {
@@ -228,7 +220,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   icon: const Icon(Icons.save),
                   label: const Text('Save Changes'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AdminTheme.teal,
+                    backgroundColor: const Color(0xFF005E66),
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -367,20 +359,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
-  List<dynamic> get filteredUsers {
-    if (search.isEmpty) return users;
-
-    return users.where((user) {
-      String name = user['name'].toString().toLowerCase();
-      String email = user['email'].toString().toLowerCase();
-      String studentId = user['student_id'].toString().toLowerCase();
-
-      return name.contains(search) ||
-          email.contains(search) ||
-          studentId.contains(search);
-    }).toList();
-  }
-
   Widget userRow(Map<String, dynamic> user) {
     String name = user['name'].toString();
     String email = user['email'].toString();
@@ -415,7 +393,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 isStudent ? 'Student' : 'Regular',
                 style: TextStyle(
                   fontSize: 12,
-                  color: isStudent ? AdminTheme.gold : Colors.blueGrey,
+                  color: isStudent ? const Color(0xFF7C5700) : Colors.blueGrey,
                 ),
               ),
             ),
@@ -444,19 +422,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           padding: const EdgeInsets.all(18),
           child: Column(
             children: [
-              TextField(
-                onChanged: (value) {
-                  setState(() => search = value.trim().toLowerCase());
-                },
-                decoration: const InputDecoration(
-                  hintText: 'Search by name, email, or user ID',
-                  prefixIcon: Icon(Icons.search),
-                  filled: true,
-                  fillColor: Color(0xFFF7F8F8),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'View and manage all registered Rihla users.',
+                  style: TextStyle(color: Colors.blueGrey, fontSize: 16),
                 ),
               ),
               const SizedBox(height: 20),
@@ -485,13 +455,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 )
-              else if (filteredUsers.isEmpty)
+              else if (users.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(20),
                   child: Text('No users found.'),
                 )
               else
-                ...filteredUsers.map((user) {
+                ...users.map((user) {
                   return userRow(Map<String, dynamic>.from(user));
                 }),
             ],
@@ -557,7 +527,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         child: Text(
                           initials,
                           style: const TextStyle(
-                            color: AdminTheme.teal,
+                            color: Color(0xFF005E66),
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
@@ -606,7 +576,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                               isStudent ? 'Student' : 'Regular',
                               style: TextStyle(
                                 color: isStudent
-                                    ? AdminTheme.gold
+                                    ? const Color(0xFF7C5700)
                                     : Colors.blueGrey,
                               ),
                             ),
@@ -756,10 +726,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (showingUserDetails) {
-      return buildUserDetails();
-    }
-
-    return buildUsersList();
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F8F8),
+      appBar: AppBar(backgroundColor: Colors.white, title: const Text('Users')),
+      body: showingUserDetails ? buildUserDetails() : buildUsersList(),
+    );
   }
 }

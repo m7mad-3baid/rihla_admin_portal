@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
-import '../themes/admin_theme.dart';
 import '../widgets/admin_card.dart';
 
 class AdminPreferencesScreen extends StatefulWidget {
@@ -99,133 +98,150 @@ class _AdminPreferencesScreenState extends State<AdminPreferencesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(28),
-      child: SizedBox(
-        width: 600,
-        child: Column(
-          children: [
-            AdminCard(
-              title: 'Admin Account',
-              subtitle: 'Manage your administrator account information.',
-              child: Column(
-                children: [
-                  Row(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F8F8),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text('Preferences'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: Center(
+          child: SizedBox(
+            width: 600,
+            child: Column(
+              children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Manage your administrator account and password.',
+                    style: TextStyle(color: Colors.blueGrey, fontSize: 16),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                AdminCard(
+                  title: 'Admin Account',
+                  subtitle: 'Manage your administrator account information.',
+                  child: Column(
                     children: [
-                      const CircleAvatar(
-                        radius: 25,
-                        backgroundColor: Color(0xFFE1F0F2),
-                        child: Icon(Icons.person, color: AdminTheme.teal),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          Text(
-                            widget.admin['name']?.toString() ?? 'Admin',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          const CircleAvatar(
+                            radius: 25,
+                            backgroundColor: Color(0xFFE1F0F2),
+                            child: Icon(Icons.person, color: Color(0xFF005E66)),
                           ),
-                          Text(
-                            widget.admin['email']?.toString() ?? '',
-                            style: const TextStyle(color: Colors.blueGrey),
-                          ),
-                          const Text(
-                            'Super Admin',
-                            style: TextStyle(
-                              color: Colors.blueGrey,
-                              fontSize: 12,
-                            ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.admin['name']?.toString() ?? 'Admin',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                widget.admin['email']?.toString() ?? '',
+                                style: const TextStyle(color: Colors.blueGrey),
+                              ),
+                              const Text(
+                                'Super Admin',
+                                style: TextStyle(
+                                  color: Colors.blueGrey,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ElevatedButton.icon(
+                          onPressed: updateProfile,
+                          icon: const Icon(Icons.save),
+                          label: const Text('Save Changes'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF005E66),
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Full Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ElevatedButton.icon(
-                      onPressed: updateProfile,
-                      icon: const Icon(Icons.save),
-                      label: const Text('Save Changes'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AdminTheme.teal,
-                        foregroundColor: Colors.white,
+                ),
+                const SizedBox(height: 20),
+                AdminCard(
+                  title: 'Change Password',
+                  subtitle: 'Use your current password to set a new password.',
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: currentPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Current Password',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            AdminCard(
-              title: 'Change Password',
-              subtitle: 'Use your current password to set a new password.',
-              child: Column(
-                children: [
-                  TextField(
-                    controller: currentPasswordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Current Password',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: newPasswordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'New Password',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: confirmPasswordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm New Password',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ElevatedButton.icon(
-                      onPressed: changePassword,
-                      icon: const Icon(Icons.lock_reset),
-                      label: const Text('Update Password'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AdminTheme.teal,
-                        foregroundColor: Colors.white,
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: newPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'New Password',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: confirmPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Confirm New Password',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ElevatedButton.icon(
+                          onPressed: changePassword,
+                          icon: const Icon(Icons.lock_reset),
+                          label: const Text('Update Password'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF005E66),
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
